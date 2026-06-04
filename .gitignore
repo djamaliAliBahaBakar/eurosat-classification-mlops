@@ -1,0 +1,44 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data
+data/
+*.zip
+*.tar
+*.tgz
+
+# Models and checkpoints
+models/*.h5
+models/*.keras
+models/*.pt
+models/*.pth
+models/checkpoints/
+checkpoints/
+
+# MLflow local runs
+mlruns/
+
+# TensorBoard logs
+logs/
+runs/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
