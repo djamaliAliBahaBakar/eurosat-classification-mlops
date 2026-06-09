@@ -84,7 +84,6 @@ The following experiments are performed:
 
 | Experiment | Model | Strategy |
 |------------|--------|----------|
-| Baseline | Custom CNN | Training from scratch |
 | Experiment 1 | MobileNetV3 | Feature Extraction |
 | Experiment 2 | MobileNetV3 | Fine-Tuning |
 
@@ -110,7 +109,6 @@ Results will be added after the completion of the training pipeline.
 
 | Experiment | Accuracy | Precision | Recall | F1 |
 |------------|------------|------------|------------|------------|
-| Baseline CNN | TBD | TBD | TBD | TBD |
 | MobileNetV3 Feature Extraction | TBD | TBD | TBD | TBD |
 | MobileNetV3 Fine-Tuning | TBD | TBD | TBD | TBD |
 

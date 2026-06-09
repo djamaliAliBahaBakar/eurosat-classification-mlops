@@ -1,0 +1,21 @@
+dataset:
+  name: "apollo2506/eurosat-dataset"
+  sub_dir: "EuroSAT"
+  seed: 42
+
+data:
+  image_size: (224, 224)
+  batch_size: 32
+
+training:
+  epochs_frozen: 40
+  epochs_finetune: 15
+  learning_rate_frozen: 0.001
+  learning_rate_finetune: 0.00001
+
+fine_tuning:
+  fine_tune_at: -30
+
+artifacts:
+  model_dir: "models"
+  best_model_name: "best_model.keras"
