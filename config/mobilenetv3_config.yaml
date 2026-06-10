@@ -2,9 +2,10 @@ dataset:
   name: "apollo2506/eurosat-dataset"
   sub_dir: "EuroSAT"
   seed: 42
+  input_shape: [224, 224, 3]
 
 data:
-  image_size: (224, 224)
+  image_size: [224, 224]
   batch_size: 32
 
 training:
@@ -12,10 +13,18 @@ training:
   epochs_finetune: 15
   learning_rate_frozen: 0.001
   learning_rate_finetune: 0.00001
+  fe_early_stop_patience: 10
+  ft_early_stop_patience: 20
+  fe_reduce_patience: 4
+  ft_reduce_patience: 7
+  fe_min_lr: 1e-7
+  ft_min_lr: 1e-8
 
 fine_tuning:
-  fine_tune_at: -30
+  fine_tune_last_n_layers: 30
 
 artifacts:
   model_dir: "models"
   best_model_name: "best_model.keras"
+  fe_best_model_name: "models/best_model_feature_extraction.keras"
+  ft_best_model_name:  "models/best_model_finetuned.keras"
