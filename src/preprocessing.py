@@ -14,7 +14,7 @@ def build_data_augmentation():
     return data_augmentation
 
 
-def  prepare_dataset(ds,  data_augmentation, preprocess_input, augment=False, shuffle=True ):
+def  prepare_dataset(ds,  data_augmentation, preprocess_input, augment=False, shuffle=True, shuffle_buffer_size=1000 ):
     # Normalisation MobileNetV2
     normalization = lambda x, y: (preprocess_input(x), y)
     ds = ds.map(normalization, num_parallel_calls=tf.data.AUTOTUNE)
@@ -26,7 +26,7 @@ def  prepare_dataset(ds,  data_augmentation, preprocess_input, augment=False, sh
     
     # Shuffle pour le training
     if shuffle:
-        ds = ds.shuffle(1000)
+        ds = ds.shuffle(shuffle_buffer_size)
     
     # Optimisation des performances
     #ds = ds.cache()  # Cache en mémoire

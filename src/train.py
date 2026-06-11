@@ -54,9 +54,16 @@ def train_feature_extraction(preprocess_input, config_path="configs/mobilenetv3_
         print("labels shape =", labels.shape)
         print(labels[:5])
     data_augmentation= build_data_augmentation()
-    train_ds_prepared = prepare_dataset(train_ds,data_augmentation, preprocess_input, augment=True, shuffle=True )
-    val_ds_prepared = prepare_dataset(val_ds, data_augmentation,preprocess_input,  augment=False, shuffle=False )
-    test_ds_prepared = prepare_dataset(test_ds, data_augmentation, preprocess_input, augment=False, shuffle=False )
+    shuffle_buffer_size = config["data"]["shuffle_buffer_size"]
+    train_ds_prepared = prepare_dataset(train_ds,data_augmentation, preprocess_input, augment=True, shuffle=True , shuffle_buffer_size = shuffle_buffer_size)
+    val_ds_prepared = prepare_dataset(val_ds, data_augmentation,preprocess_input,  augment=False, shuffle=False , shuffle_buffer_size = shuffle_buffer_size)
+    test_ds_prepared = prepare_dataset(test_ds, data_augmentation, preprocess_input, augment=False, shuffle=False , shuffle_buffer_size = shuffle_buffer_size)
+
+
+    if config.get("smoke_test", {}).get("enabled", False):
+        train_ds_prepared = train_ds_prepared.take(config["smoke_test"]["train_batches"])
+        val_ds_prepared = val_ds_prepared.take(config["smoke_test"]["val_batches"])
+        test_ds_prepared = test_ds_prepared.take(config["smoke_test"]["test_batches"])
 
     model, base = build_mobilenetv3_model(input_shape, len(class_names))
     base.trainable = False
