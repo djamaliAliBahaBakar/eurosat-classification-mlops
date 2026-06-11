@@ -24,7 +24,7 @@ def get_predictions(model, test_ds_prepared):
 
     for images, labels in test_ds_prepared:
         predictions = model.predict(images, verbose=0)
-        y_true.extend(np.argmax(labels.numpy(), axis=1))
+        y_true.extend(labels.numpy())
         y_pred.extend(np.argmax(predictions, axis=1))
 
     y_true = np.array(y_true)

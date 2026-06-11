@@ -40,20 +40,23 @@ def compile_model(model, learning_rate):
     model.compile(
     optimizer=tf.keras.optimizers.Adam(learning_rate=learning_rate),  
     loss='sparse_categorical_crossentropy',
-    metrics=['accuracy', keras.metrics.TopKCategoricalAccuracy(k=2, name='top2_accuracy')])
+    metrics=['accuracy', keras.metrics.SparseTopKCategoricalAccuracy(k=2, name='top2_accuracy')])
 
     
 
-def train_feature_extraction():
+def train_feature_extraction(preprocess_input, config_path="configs/mobilenetv3_config.yaml"):
 
-    config = load_config("configs/mobilenetv3_config.yaml")
+    config = load_config(config_path) # "configs/mobilenetv3_config.yaml")
     batch_size = config["data"]["batch_size"]
     input_shape = config["dataset"]["input_shape"]
     train_ds, val_ds, test_ds, class_names= load_dataset(dataset_name=config["dataset"]["name"], image_size=config["data"]["image_size"], batch_size=batch_size, seed=config["dataset"]["seed"], sub_dir_path=config["dataset"]["sub_dir"])
+    for images, labels in test_ds.take(1):
+        print("labels shape =", labels.shape)
+        print(labels[:5])
     data_augmentation= build_data_augmentation()
-    train_ds_prepared = prepare_dataset(train_ds,data_augmentation, augment=True, shuffle=True )
-    val_ds_prepared = prepare_dataset(val_ds, data_augmentation, augment=False, shuffle=False )
-    test_ds_prepared = prepare_dataset(test_ds, data_augmentation, augment=False, shuffle=False )
+    train_ds_prepared = prepare_dataset(train_ds,data_augmentation, preprocess_input, augment=True, shuffle=True )
+    val_ds_prepared = prepare_dataset(val_ds, data_augmentation,preprocess_input,  augment=False, shuffle=False )
+    test_ds_prepared = prepare_dataset(test_ds, data_augmentation, preprocess_input, augment=False, shuffle=False )
 
     model, base = build_mobilenetv3_model(input_shape, len(class_names))
     base.trainable = False
@@ -69,16 +72,16 @@ def train_feature_extraction():
         callbacks=[early_stopping, reduce_lr, checkpoint],
         verbose=1
     )
-    return model, base, history, train_ds_prepared, val_ds_prepared, test_ds_prepared
+    return model, base, history, train_ds_prepared, val_ds_prepared, test_ds_prepared, class_names
 
 
 
 
-def train_fine_tuning(model, base, train_ds_prepared, val_ds_prepared, test_ds_prepared):
+def train_fine_tuning(model, base, train_ds_prepared, val_ds_prepared, test_ds_prepared, config_path="configs/mobilenetv3_config.yaml"):
 
     base.trainable = True
     
-    config = load_config("configs/mobilenetv3_config.yaml")
+    config = load_config(config_path)
     fine_tune_at = len(base.layers) - config["fine_tuning"]["fine_tune_last_n_layers"]
 
     for i, layer in enumerate(base.layers):
