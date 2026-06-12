@@ -1,177 +1,210 @@
-# EuroSAT Classification MLOps
+# EuroSAT Image Classification - MLOps Pipeline
 
-## Project Overview
+## Overview
 
-This project demonstrates the design and implementation of a production-oriented Deep Learning pipeline for satellite image classification using the EuroSAT dataset.
+This project is a Machine Learning Engineering project for satellite image classification using the EuroSAT dataset.
 
-The objective is to compare a baseline Convolutional Neural Network (CNN) trained from scratch with a transfer learning approach based on a pre-trained MobileNetV3 model.
+The objective is not only to train a computer vision model, but to structure the project as a reproducible ML pipeline with clear separation between data loading, preprocessing, model building, training, evaluation, and inference.
 
-Several training strategies are explored, including feature extraction and fine-tuning, in order to measure the impact of transfer learning on model performance.
+The project uses MobileNetV3Small with transfer learning to classify satellite images into 10 land-use and land-cover classes.
 
-The project follows an end-to-end Machine Learning workflow covering:
+## Problem
 
-- Data preparation
-- Data augmentation
-- Model training
-- Transfer learning
-- Fine-tuning
-- Model evaluation
-- Experiment comparison
-- Reproducibility
-- Deployment readiness
+EuroSAT is a satellite image classification dataset containing 27,000 images across 10 classes.
 
-The final goal is to demonstrate the ability to build production-oriented Deep Learning systems rather than focusing solely on model accuracy.
+The goal is to classify each image into one of the following categories:
 
----
+* AnnualCrop
+* Forest
+* HerbaceousVegetation
+* Highway
+* Industrial
+* Pasture
+* PermanentCrop
+* Residential
+* River
+* SeaLake
 
-## Problem Statement
+## Tech Stack
 
-Land-cover classification is a common Computer Vision task in Earth Observation.
-
-Given a satellite image, the objective is to predict the corresponding land-cover category such as:
-
-- Forest
-- River
-- Residential
-- Highway
-- Pasture
-- Industrial
-- Annual Crop
-- Permanent Crop
-- Herbaceous Vegetation
-- Sea/Lake
-
-Accurate classification of satellite imagery is useful for environmental monitoring, urban planning and agricultural analysis.
-
----
-
-## Dataset
-
-This project uses the EuroSAT dataset.
-
-EuroSAT is a publicly available benchmark dataset composed of labeled Sentinel-2 satellite images covering 10 land-use and land-cover classes.
-
-Dataset characteristics:
-
-- 10 classes
-- RGB satellite imagery
-- Balanced dataset
-- ~27,000 labeled images
-
----
-
-## Methodology
-
-### Baseline Model
-
-A custom CNN is trained from scratch to establish a baseline performance.
-
-### Transfer Learning
-
-A pre-trained MobileNetV3 model is used as a feature extractor.
-
-### Fine-Tuning
-
-Selected layers of the MobileNetV3 backbone are unfrozen and fine-tuned on the EuroSAT dataset.
-
-The objective is to evaluate how transfer learning improves classification performance compared to training a model from scratch.
-
----
-
-## Experiments
-
-The following experiments are performed:
-
-| Experiment | Model | Strategy |
-|------------|--------|----------|
-| Experiment 1 | MobileNetV3 | Feature Extraction |
-| Experiment 2 | MobileNetV3 | Fine-Tuning |
-
----
-
-## Evaluation Metrics
-
-Models are evaluated using:
-
-- Accuracy
-- Precision
-- Recall
-- F1-Score
-- Confusion Matrix
-
-These metrics provide a more complete view of model performance than accuracy alone.
-
----
-
-## Results
-
-Results will be added after the completion of the training pipeline.
-
-| Experiment | Accuracy | Precision | Recall | F1 |
-|------------|------------|------------|------------|------------|
-| MobileNetV3 Feature Extraction | TBD | TBD | TBD | TBD |
-| MobileNetV3 Fine-Tuning | TBD | TBD | TBD | TBD |
-
----
-
-## Inference Example
-
-Example of the expected inference workflow:
-
-Input image:
-
-```text
-satellite_image.jpg
-```
-
-Prediction:
-
-```text
-Forest        94%
-River          4%
-Pasture        2%
-```
-
-The final system should be able to process unseen satellite images and provide class probabilities for decision support.
-
----
+* Python
+* TensorFlow / Keras
+* MobileNetV3Small
+* scikit-learn
+* NumPy
+* Matplotlib
+* YAML configuration
+* Git / GitHub
 
 ## Project Structure
 
 ```text
 eurosat-classification-mlops/
-│
-├── notebooks/
-├── src/
-├── configs/
+├── config/
+│   ├── mobilenetv3_config.yaml
+│   └── mobilenetv3_smoke_test.yaml
 ├── models/
-├── reports/
-├── tests/
-├── requirements.txt
+│   ├── best_model_feature_extraction.keras
+│   ├── best_model_finetuned.keras
+│   └── class_names.json
+├── scripts/
+│   ├── smoke_test.py
+│   └── predict_test.py
+├── src/
+│   ├── data.py
+│   ├── preprocessing.py
+│   ├── model.py
+│   ├── train.py
+│   ├── evaluate.py
+│   ├── predict.py
+│   └── eurosat_classifier/
+│       └── config.py
 └── README.md
 ```
 
----
+## ML Pipeline
 
-## Reproducibility
+The pipeline is organized into independent modules:
 
-The project aims to follow Machine Learning Engineering best practices:
+### 1. Data loading
 
-- Modular codebase
-- Configuration-driven training
-- Experiment tracking
-- Reproducible training pipeline
-- Deployment-ready artifacts
+`data.py` is responsible for loading the EuroSAT dataset and creating the training, validation, and test datasets.
 
----
+### 2. Preprocessing
 
-## Future Improvements
+`preprocessing.py` applies image preprocessing and data augmentation.
 
-Potential future extensions:
+The training dataset uses augmentation, while validation and test datasets only use the required preprocessing.
 
-- Compare additional architectures (EfficientNet, ResNet)
-- Hyperparameter tuning
-- MLflow integration
-- Docker packaging
-- CI/CD pipeline
-- Model serving API
+### 3. Model
+
+`model.py` builds a MobileNetV3Small-based model.
+
+The model uses ImageNet pretrained weights and adds a custom classification head for the 10 EuroSAT classes.
+
+### 4. Training
+
+`train.py` contains two training phases:
+
+* Feature extraction: the MobileNetV3Small backbone is frozen.
+* Fine-tuning: the last layers of the backbone are unfrozen and trained with a lower learning rate.
+
+### 5. Evaluation
+
+`evaluate.py` evaluates the trained model using:
+
+* Loss
+* Accuracy
+* Top-2 accuracy
+* Confusion matrix
+* Classification report
+
+### 6. Prediction
+
+`predict.py` handles inference on a single image.
+
+It loads and preprocesses an image, runs prediction, and returns:
+
+* predicted class
+* confidence score
+* top-k predictions
+* optional full probability distribution
+
+## Configuration
+
+Training parameters are defined in YAML files.
+
+Example:
+
+```yaml
+training:
+  epochs_frozen: 40
+  epochs_finetune: 15
+  learning_rate_frozen: 0.001
+  learning_rate_finetune: 0.00001
+```
+
+This makes experiments easier to reproduce and avoids hardcoded training parameters.
+
+## Smoke Test
+
+A smoke test is provided to validate the full pipeline quickly.
+
+It runs the complete workflow on a reduced number of batches:
+
+```text
+data loading
+→ preprocessing
+→ model creation
+→ feature extraction
+→ fine-tuning
+→ evaluation
+```
+
+Run:
+
+```bash
+python3 scripts/smoke_test.py
+```
+
+The goal of the smoke test is not to achieve high accuracy, but to ensure that the full pipeline is correctly connected.
+
+## Prediction Test
+
+A prediction test script is provided to validate inference on a local image.
+
+Run:
+
+```bash
+python3 scripts/predict_test.py
+```
+
+Example output:
+
+```python
+{
+    "predicted_class": "Pasture",
+    "confidence": 0.17,
+    "topk": [
+        ("Pasture", 0.17),
+        ("Forest", 0.15),
+        ("PermanentCrop", 0.13)
+    ]
+}
+```
+
+Low confidence is expected when using a smoke-test model trained on only a small subset of the dataset.
+
+## Current Status
+
+Implemented:
+
+* Dataset loading
+* Preprocessing pipeline
+* MobileNetV3Small model
+* Feature extraction training
+* Fine-tuning
+* Evaluation
+* Smoke test
+* Single-image prediction
+
+Next steps:
+
+* Train the full model with the complete configuration
+* Add FastAPI inference endpoint
+* Add Docker support
+* Add GitHub Actions
+* Improve experiment tracking
+
+## Goal of the Project
+
+This project demonstrates a practical ML Engineering workflow:
+
+* modular codebase
+* reproducible configuration
+* transfer learning
+* evaluation pipeline
+* inference pipeline
+* preparation for API deployment
+
+The focus is on building a production-oriented ML project, not only achieving high model accuracy in a notebook.
