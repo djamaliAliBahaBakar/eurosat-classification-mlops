@@ -14,7 +14,7 @@ sys.path.insert(0, str(CONFIG_DIR))
 from train import train_feature_extraction, train_fine_tuning
 from evaluate import evaluate
 
-from tensorflow.keras.applications.mobilenet_v2 import preprocess_input
+from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
 
 
 CONFIG_PATH = "config/mobilenetv3_smoke_test.yaml"

@@ -5,6 +5,7 @@ from tensorflow.keras import layers
 from preprocessing import prepare_dataset,build_data_augmentation
 from data import load_dataset
 from eurosat_classifier.config import load_config
+import json
 
 
 
@@ -50,9 +51,7 @@ def train_feature_extraction(preprocess_input, config_path="configs/mobilenetv3_
     batch_size = config["data"]["batch_size"]
     input_shape = config["dataset"]["input_shape"]
     train_ds, val_ds, test_ds, class_names= load_dataset(dataset_name=config["dataset"]["name"], image_size=config["data"]["image_size"], batch_size=batch_size, seed=config["dataset"]["seed"], sub_dir_path=config["dataset"]["sub_dir"])
-    for images, labels in test_ds.take(1):
-        print("labels shape =", labels.shape)
-        print(labels[:5])
+
     data_augmentation= build_data_augmentation()
     shuffle_buffer_size = config["data"]["shuffle_buffer_size"]
     train_ds_prepared = prepare_dataset(train_ds,data_augmentation, preprocess_input, augment=True, shuffle=True , shuffle_buffer_size = shuffle_buffer_size)
@@ -79,6 +78,7 @@ def train_feature_extraction(preprocess_input, config_path="configs/mobilenetv3_
         callbacks=[early_stopping, reduce_lr, checkpoint],
         verbose=1
     )
+    save_class_names(config["artifacts"]["class_names"], class_names)
     return model, base, history, train_ds_prepared, val_ds_prepared, test_ds_prepared, class_names
 
 
@@ -110,3 +110,7 @@ def train_fine_tuning(model, base, train_ds_prepared, val_ds_prepared, test_ds_p
 
     return model, history_finetuned, test_ds_prepared
 
+
+def save_class_names(path, class_names):
+    with open(path, "w") as f:
+        json.dump(class_names, f)

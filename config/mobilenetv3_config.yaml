@@ -28,3 +28,4 @@ artifacts:
   best_model_name: "best_model.keras"
   fe_best_model_name: "models/best_model_feature_extraction.keras"
   ft_best_model_name:  "models/best_model_finetuned.keras"
+  class_names: "models/class_names.json"
