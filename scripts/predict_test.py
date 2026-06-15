@@ -11,6 +11,9 @@ sys.path.insert(0, str(SRC_DIR))
 CONFIG_DIR = ROOT_DIR / "config"
 sys.path.insert(0, str(CONFIG_DIR))
 
+MODELS_DIR = ROOT_DIR / "models"
+sys.path.insert(0, str(MODELS_DIR))
+
 import tensorflow as tf
 from tensorflow import keras
 import json
@@ -20,6 +23,7 @@ from tensorflow.keras.applications.mobilenet_v3 import preprocess_input
 
 CONFIG_PATH = "config/mobilenetv3_smoke_test.yaml"
 
+print(sys.path)
 config = load_config(CONFIG_PATH) #
 
 model_path = config["artifacts"]["ft_best_model_name"]

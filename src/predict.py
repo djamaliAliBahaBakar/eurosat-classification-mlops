@@ -22,6 +22,6 @@ def get_top_k_predictions(predictions, class_names, k=3):
     return {
         'predicted_class': class_names[predicted_class_idx],
         'confidence': float(confidence),
-        'all_probabilities': predictions[0],
+        'all_probabilities': predictions[0].tolist(),
         'topk': [(class_names[i], float(predictions[0][i])) for i in topk_idx]
     }

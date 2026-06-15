@@ -1,7 +1,6 @@
 from model import build_mobilenetv3_model
 import tensorflow as tf
 from tensorflow import keras
-from tensorflow.keras import layers
 from preprocessing import prepare_dataset,build_data_augmentation
 from data import load_dataset
 from eurosat_classifier.config import load_config
