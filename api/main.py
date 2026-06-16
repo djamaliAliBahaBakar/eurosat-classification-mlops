@@ -3,6 +3,7 @@ from pathlib import Path
 
 
 
+
 ROOT_DIR = Path(__file__).resolve().parent.parent
 SRC_DIR = ROOT_DIR / "src"
 
@@ -11,10 +12,12 @@ sys.path.insert(0, str(SRC_DIR))
 CONFIG_DIR = ROOT_DIR / "config"
 sys.path.insert(0, str(CONFIG_DIR))
 
-UPLOAD_DIR = ROOT_DIR / "tmp"
+UPLOAD_DIR = ROOT_DIR / "uploads"
+UPLOAD_DIR.mkdir(exist_ok=True)
 sys.path.insert(0, str(UPLOAD_DIR))
 
 from eurosat_classifier.config import load_config
+import os
 
 from tensorflow import keras
 import json
@@ -64,10 +67,23 @@ async def predict_demo():
 
 @app.post("/predict")
 async def predict(file : UploadFile):
-    file_location = f"{UPLOAD_DIR}/{file.filename}"
+    file_location = UPLOAD_DIR/file.filename
 
     # Save uploaded file locally
     with open(file_location, "wb+") as file_object:
         file_object.write(await file.read())
 
     # load_and process
+    image_loaded = load_and_preprocess_image(file_location,config["data"]["image_size"], preprocess_input)
+
+    predictions = predict_image(loaded_model, image_loaded)
+    k_predictions = get_top_k_predictions(predictions, class_names)
+    try:
+        os.remove(file_location)
+    except OSError as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"File {file.filename} not remove"
+        )
+
+    return k_predictions

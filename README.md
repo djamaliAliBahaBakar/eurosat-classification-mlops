@@ -4,9 +4,11 @@
 
 This project is a Machine Learning Engineering project for satellite image classification using the EuroSAT dataset.
 
-The objective is not only to train a computer vision model, but to structure the project as a reproducible ML pipeline with clear separation between data loading, preprocessing, model building, training, evaluation, and inference.
+The objective is not only to train a computer vision model, but also to build a reproducible and production-oriented ML pipeline with clear separation between data loading, preprocessing, model training, evaluation, inference, API serving, and containerization.
 
 The project uses MobileNetV3Small with transfer learning to classify satellite images into 10 land-use and land-cover classes.
+
+---
 
 ## Problem
 
@@ -25,21 +27,63 @@ The goal is to classify each image into one of the following categories:
 * River
 * SeaLake
 
+---
+
 ## Tech Stack
 
 * Python
 * TensorFlow / Keras
 * MobileNetV3Small
+* FastAPI
+* Docker
 * scikit-learn
 * NumPy
 * Matplotlib
 * YAML configuration
 * Git / GitHub
 
+---
+
+## Architecture
+
+```text
+EuroSAT Dataset
+        ↓
+Data Loading
+        ↓
+Preprocessing & Augmentation
+        ↓
+MobileNetV3Small
+        ↓
+Feature Extraction
+        ↓
+Fine-Tuning
+        ↓
+Model Artifact (.keras)
+        ↓
+Inference Pipeline
+        ↓
+FastAPI REST API
+        ↓
+Docker Container
+```
+
+---
+
+## Model Performance
+
+Results will be updated after full training on the complete dataset configuration.
+
+Current smoke-test results are intended only to validate the end-to-end pipeline and should not be used to evaluate model quality.
+
+---
+
 ## Project Structure
 
 ```text
 eurosat-classification-mlops/
+├── api/
+│   └── main.py
 ├── config/
 │   ├── mobilenetv3_config.yaml
 │   └── mobilenetv3_smoke_test.yaml
@@ -59,14 +103,18 @@ eurosat-classification-mlops/
 │   ├── predict.py
 │   └── eurosat_classifier/
 │       └── config.py
+├── Dockerfile
+├── requirements.txt
 └── README.md
 ```
 
+---
+
 ## ML Pipeline
 
-The pipeline is organized into independent modules:
+The pipeline is organized into independent modules.
 
-### 1. Data loading
+### 1. Data Loading
 
 `data.py` is responsible for loading the EuroSAT dataset and creating the training, validation, and test datasets.
 
@@ -78,7 +126,7 @@ The training dataset uses augmentation, while validation and test datasets only 
 
 ### 3. Model
 
-`model.py` builds a MobileNetV3Small-based model.
+`model.py` builds a MobileNetV3Small-based classifier.
 
 The model uses ImageNet pretrained weights and adds a custom classification head for the 10 EuroSAT classes.
 
@@ -86,8 +134,13 @@ The model uses ImageNet pretrained weights and adds a custom classification head
 
 `train.py` contains two training phases:
 
-* Feature extraction: the MobileNetV3Small backbone is frozen.
-* Fine-tuning: the last layers of the backbone are unfrozen and trained with a lower learning rate.
+#### Feature Extraction
+
+The MobileNetV3Small backbone is frozen and only the classification head is trained.
+
+#### Fine-Tuning
+
+The last layers of the backbone are unfrozen and trained using a smaller learning rate.
 
 ### 5. Evaluation
 
@@ -95,24 +148,30 @@ The model uses ImageNet pretrained weights and adds a custom classification head
 
 * Loss
 * Accuracy
-* Top-2 accuracy
-* Confusion matrix
-* Classification report
+* Top-2 Accuracy
+* Confusion Matrix
+* Classification Report
 
 ### 6. Prediction
 
 `predict.py` handles inference on a single image.
 
-It loads and preprocesses an image, runs prediction, and returns:
+It:
 
-* predicted class
-* confidence score
-* top-k predictions
-* optional full probability distribution
+* Loads an image
+* Applies preprocessing
+* Runs model inference
+* Returns:
+
+  * Predicted class
+  * Confidence score
+  * Top-k predictions
+
+---
 
 ## Configuration
 
-Training parameters are defined in YAML files.
+Training parameters are defined in YAML configuration files.
 
 Example:
 
@@ -124,21 +183,23 @@ training:
   learning_rate_finetune: 0.00001
 ```
 
-This makes experiments easier to reproduce and avoids hardcoded training parameters.
+This approach improves reproducibility and avoids hardcoded parameters.
+
+---
 
 ## Smoke Test
 
-A smoke test is provided to validate the full pipeline quickly.
+A smoke test validates the complete ML pipeline on a reduced subset of the dataset.
 
-It runs the complete workflow on a reduced number of batches:
+Workflow:
 
 ```text
-data loading
-→ preprocessing
-→ model creation
-→ feature extraction
-→ fine-tuning
-→ evaluation
+Data Loading
+→ Preprocessing
+→ Model Creation
+→ Feature Extraction
+→ Fine-Tuning
+→ Evaluation
 ```
 
 Run:
@@ -147,11 +208,13 @@ Run:
 python3 scripts/smoke_test.py
 ```
 
-The goal of the smoke test is not to achieve high accuracy, but to ensure that the full pipeline is correctly connected.
+The objective is pipeline validation, not model performance.
 
-## Prediction Test
+---
 
-A prediction test script is provided to validate inference on a local image.
+## Local Prediction Test
+
+A prediction script validates inference on a local image.
 
 Run:
 
@@ -173,7 +236,89 @@ Example output:
 }
 ```
 
-Low confidence is expected when using a smoke-test model trained on only a small subset of the dataset.
+Low confidence is expected when using a smoke-test model.
+
+---
+
+## FastAPI Inference API
+
+The project exposes a REST API using FastAPI.
+
+### Health Check
+
+```http
+GET /health
+```
+
+Response:
+
+```json
+{
+  "status": "ok"
+}
+```
+
+### Prediction Endpoint
+
+```http
+POST /predict
+```
+
+Upload an image and receive model predictions.
+
+Example:
+
+```bash
+curl -X POST \
+  -F "file=@data/Sample-images.ppm" \
+  http://127.0.0.1:8000/predict
+```
+
+Example response:
+
+```json
+{
+  "predicted_class": "Pasture",
+  "confidence": 0.175,
+  "topk": [
+    ["Pasture", 0.175],
+    ["Forest", 0.158],
+    ["PermanentCrop", 0.138]
+  ]
+}
+```
+
+---
+
+## Docker
+
+Build the Docker image:
+
+```bash
+docker build -t eurosat-api .
+```
+
+Run the container:
+
+```bash
+docker run -p 8000:8000 eurosat-api
+```
+
+Verify the API:
+
+```bash
+curl http://127.0.0.1:8000/health
+```
+
+Run a prediction:
+
+```bash
+curl -X POST \
+  -F "file=@data/Sample-images.ppm" \
+  http://127.0.0.1:8000/predict
+```
+
+---
 
 ## Current Status
 
@@ -184,27 +329,36 @@ Implemented:
 * MobileNetV3Small model
 * Feature extraction training
 * Fine-tuning
-* Evaluation
+* Evaluation pipeline
 * Smoke test
 * Single-image prediction
+* FastAPI inference API
+* Docker containerization
 
-Next steps:
+---
 
-* Train the full model with the complete configuration
-* Add FastAPI inference endpoint
-* Add Docker support
-* Add GitHub Actions
-* Improve experiment tracking
+## Future Improvements
+
+* Train the full model using the complete dataset
+* Add GitHub Actions CI pipeline
+* Add automated API tests
+* Deploy the Dockerized API
+* Add experiment tracking (MLflow)
+* Add model monitoring
+* Explore alternative CNN architectures
+
+---
 
 ## Goal of the Project
 
-This project demonstrates a practical ML Engineering workflow:
+This project demonstrates a complete Machine Learning Engineering workflow:
 
-* modular codebase
-* reproducible configuration
-* transfer learning
-* evaluation pipeline
-* inference pipeline
-* preparation for API deployment
+* Modular codebase
+* Reproducible configuration
+* Transfer learning
+* Evaluation pipeline
+* Inference pipeline
+* REST API serving
+* Dockerized deployment
 
-The focus is on building a production-oriented ML project, not only achieving high model accuracy in a notebook.
+The focus is on building a production-oriented ML project rather than only achieving high accuracy in a notebook environment.
